@@ -48,7 +48,7 @@ def create_ngrams(data, n, splitter, tokenizer):
 
             # TODO: tokenize the words in the sentence
             # name the list of tokens as 'tokens'
-            raise NotImplementedError
+            tokens = tokenizer.tokenize(sentence)
             # Your code ends here
 
             # drop short sentences
@@ -66,7 +66,16 @@ def create_ngrams(data, n, splitter, tokenizer):
                 #   and its occurrence count as values
                 # - 'next_word_candidates' is a dictionary with tuple of the context
                 #   (i.e. the (n-1)-grams) as keys and a set of possible next words as values
-                raise NotImplementedError
+                ngram = tuple(tokens[idx:idx+n])
+                context = tuple(tokens[idx:idx+n-1])
+
+                ngrams[ngram] += 1  # add the count of this occurrence
+
+                ngram_context[context] += 1 # add the count of this occurrence
+
+                if context not in next_word_candidates:
+                    next_word_candidates[context] = set()
+                next_word_candidates[context].add(tokens[idx+n-1])    # add word to the possible next words dictionary
                 # Your code ends here
 
     # Sort all the next word candidates
@@ -86,7 +95,9 @@ def create_ngrams(data, n, splitter, tokenizer):
         for nw in next_words:
             # TODO: compute the estimated probability of the next word given the context
             # hint: use the counters 'ngrams' and 'ngram_context' you have created above
-            raise NotImplementedError
+            ngram = (*context, nw)
+            prob = ngrams[ngram] / ngram_context[context]   # (Count of n-gram) / (Count of (n-1)-gram)
+            scores.append(prob)
             # Your code ends here
 
         # record the most probable next word as the prediction
@@ -118,8 +129,30 @@ def plot_next_word_prob(word_scores, word_candidates, context, top=10, save_path
     # - word_candidates is a dictionary with tuple of the context as keys and a list of possible next words as values (the sorted_next_word_candidates in create_ngrams function)
     # - for a given context, elements in word_scores[context] and word_candidates[context] have one-to-one correspondence
     # - context is a tuple of words
+    scores = np.array(word_scores[context])
+    words = np.array(word_candidates[context])
 
-    raise NotImplementedError
+    sorted_indices = np.argsort(scores)[::-1]
+    indices = sorted_indices
+    if len(indices) > top:
+        indices = indices[:top]
+    top_probs = scores[indices]
+    top_words = words[indices]
+
+    plt.figure(figsize=(10, 4))
+    plt.bar(top_words, top_probs)
+    plt.title(f"Next Word Probabilities for Sequence: '{' '.join(context)}'")
+    plt.xlabel('Word')
+    plt.ylabel('Probability')
+    plt.xticks(rotation=45, ha='right')
+    plt.tight_layout()
+
+    if save_path is not None:
+        plt.savefig(save_path)
+    else:
+        print('Top Probabilities\n')
+        for i in range(top):
+            print(f'\t{top_words[i]} : {top_probs[i]}')
     # Your code ends here
 
 
